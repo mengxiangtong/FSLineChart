@@ -23,22 +23,26 @@
     [super viewDidLoad];
     
     [self loadSimpleChart];
+    
     [self loadChartWithDates];
 }
 
 #pragma mark - Setting up the charts
 
 - (void)loadSimpleChart {
-    NSMutableArray* chartData = [NSMutableArray arrayWithCapacity:10];
+    NSMutableArray* chartData = [NSMutableArray arrayWithCapacity:20];
     
-    for(int i=0;i<10;i++) {
+    for(int i=0;i<20;i++) {
         int r = (rand() + rand()) % 1000;
         chartData[i] = [NSNumber numberWithInt:r + 200];
     }
     
     // Setting up the line chart
-    self.chart.verticalGridStep = 5;
+    //y 网格
+    self.chart.verticalGridStep = 8;
     self.chart.horizontalGridStep = 9;
+    self.chart.valueLabelPosition = ValueLabelLeft;
+    self.chart.fillColor = nil;
     
     self.chart.labelForIndex = ^(NSUInteger item) {
         return [NSString stringWithFormat:@"%lu",(unsigned long)item];
@@ -64,12 +68,14 @@
     _chartWithDates.verticalGridStep = 6;
     _chartWithDates.horizontalGridStep = 3;
     _chartWithDates.fillColor = nil;
-    _chartWithDates.displayDataPoint = YES;
+    /*
+    _chartWithDates.displayDataPoint = NO;
     _chartWithDates.dataPointColor = [UIColor fsOrange];
     _chartWithDates.dataPointBackgroundColor = [UIColor fsOrange];
     _chartWithDates.dataPointRadius = 2;
     _chartWithDates.color = [_chartWithDates.dataPointColor colorWithAlphaComponent:0.3];
-    _chartWithDates.valueLabelPosition = ValueLabelLeftMirrored;
+    */
+    _chartWithDates.valueLabelPosition = ValueLabelLeft;
     
     _chartWithDates.labelForIndex = ^(NSUInteger item) {
         return months[item];

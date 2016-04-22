@@ -81,7 +81,7 @@
     _axisColor = [UIColor colorWithWhite:0.7 alpha:1.0];
     _innerGridColor = [UIColor colorWithWhite:0.9 alpha:1.0];
     _drawInnerGrid = YES;
-    _bezierSmoothing = YES;
+    _bezierSmoothing = NO;
     _bezierSmoothingTension = 0.2;
     _lineWidth = 1;
     _innerGridLineWidth = 0.5;
@@ -259,17 +259,23 @@
     }
 }
 
+# pragma mark - 绘制 表格
+
 - (void)drawGrid
 {
     CGContextRef ctx = UIGraphicsGetCurrentContext();
+    //1.使用UIKit进行绘制，因为UIKit只会对当前上下文栈顶的context操作，所以要把形参中的context设置为当前上下文
     UIGraphicsPushContext(ctx);
-    CGContextSetLineWidth(ctx, _axisLineWidth);
-    CGContextSetStrokeColorWithColor(ctx, [_axisColor CGColor]);
     
-    // draw coordinate axis
+    CGContextSetLineWidth(ctx, _axisLineWidth);//这里设置
+    
+    CGContextSetStrokeColorWithColor(ctx, [_axisColor CGColor]);//线 颜色
+    
+    // draw coordinate axis 轴
     CGContextMoveToPoint(ctx, _margin, _margin);
     CGContextAddLineToPoint(ctx, _margin, _axisHeight + _margin + 3);
     CGContextStrokePath(ctx);
+    
     
     CGFloat scale = [self horizontalScale];
     CGFloat minBound = [self minVerticalBound];
@@ -324,6 +330,8 @@
     [self.layers removeAllObjects];
 }
 
+
+# pragma mark - - -------
 - (void)strokeChart
 {
     CGFloat minBound = [self minVerticalBound];
@@ -335,12 +343,24 @@
         scale = _axisHeight / spread;
     }
     
+    /*使用CAShapeLayer与UIBezierPath可以实现不在view的drawRect方法中就画出一些想要的图形
+     
+     步骤：
+     1、新建UIBezierPath对象bezierPath
+     2、新建CAShapeLayer对象caShapeLayer
+     3、将bezierPath的CGPath赋值给caShapeLayer的path，即caShapeLayer.path = bezierPath.CGPath
+     4、把caShapeLayer添加到某个显示该图形的layer中*/
+    
+    
     UIBezierPath *noPath = [self getLinePath:0 withSmoothing:_bezierSmoothing close:NO];
+    
     UIBezierPath *path = [self getLinePath:scale withSmoothing:_bezierSmoothing close:NO];
+    
     
     UIBezierPath *noFill = [self getLinePath:0 withSmoothing:_bezierSmoothing close:YES];
     UIBezierPath *fill = [self getLinePath:scale withSmoothing:_bezierSmoothing close:YES];
     
+    //填充 颜色
     if(_fillColor) {
         CAShapeLayer* fillLayer = [CAShapeLayer layer];
         fillLayer.frame = CGRectMake(self.bounds.origin.x, self.bounds.origin.y + minBound * scale, self.bounds.size.width, self.bounds.size.height);
@@ -358,19 +378,32 @@
         fillAnimation.duration = _animationDuration;
         fillAnimation.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
         fillAnimation.fillMode = kCAFillModeForwards;
+        
         fillAnimation.fromValue = (id)noFill.CGPath;
         fillAnimation.toValue = (id)fill.CGPath;
+        
         [fillLayer addAnimation:fillAnimation forKey:@"path"];
     }
     
+    
+
+    
+    //
     CAShapeLayer *pathLayer = [CAShapeLayer layer];
     pathLayer.frame = CGRectMake(self.bounds.origin.x, self.bounds.origin.y + minBound * scale, self.bounds.size.width, self.bounds.size.height);
     pathLayer.bounds = self.bounds;
+    
+    //  3、将bezierPath的CGPath赋值给caShapeLayer的path，即caShapeLayer.path = bezierPath.CGPath
     pathLayer.path = path.CGPath;
+    
     pathLayer.strokeColor = [_color CGColor];
     pathLayer.fillColor = nil;
     pathLayer.lineWidth = _lineWidth;
+    pathLayer.lineWidth = 1; //绘制的 线 宽
+
     pathLayer.lineJoin = kCALineJoinRound;
+    
+    
     
     [self.layer addSublayer:pathLayer];
     [self.layers addObject:pathLayer];
@@ -411,7 +444,8 @@
         UIBezierPath* circle = [UIBezierPath bezierPathWithOvalInRect:CGRectMake(p.x - _dataPointRadius, p.y - _dataPointRadius, _dataPointRadius * 2, _dataPointRadius * 2)];
         
         CAShapeLayer *fillLayer = [CAShapeLayer layer];
-        fillLayer.frame = CGRectMake(p.x, p.y, _dataPointRadius, _dataPointRadius);
+        fillLayer.frame = CGRectMake(p.x, p.y, _dataPointRadius , _dataPointRadius);
+        
         fillLayer.bounds = CGRectMake(p.x, p.y, _dataPointRadius, _dataPointRadius);
         fillLayer.path = circle.CGPath;
         fillLayer.strokeColor = _dataPointColor.CGColor;
@@ -557,10 +591,16 @@
     }
 }
 
+
+# pragma mark - - <##>
+//smoothed 平滑
+
 - (UIBezierPath*)getLinePath:(float)scale withSmoothing:(BOOL)smoothed close:(BOOL)closed
 {
     UIBezierPath* path = [UIBezierPath bezierPath];
     
+    
+    //
     if(smoothed) {
         for(int i=0;i<_data.count - 1;i++) {
             CGPoint controlPoint[2];
