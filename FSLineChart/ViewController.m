@@ -30,20 +30,35 @@
 #pragma mark - Setting up the charts
 
 - (void)loadSimpleChart {
-    NSMutableArray* chartData = [NSMutableArray arrayWithCapacity:20];
     
-    for(int i=0;i<20;i++) {
-        int r = (rand() + rand()) % 1000;
-        chartData[i] = [NSNumber numberWithInt:r + 200];
-    }
+    NSMutableArray* chartData = [NSMutableArray arrayWithObjects:
+                                 [NSNumber numberWithInt:3],
+                                 [NSNumber numberWithInt:5],
+                                 [NSNumber numberWithInt:8],
+                                 [NSNumber numberWithInt:13],
+                                 [NSNumber numberWithInt:-3],
+                                 [NSNumber numberWithInt:16],
+                                 [NSNumber numberWithInt:20],
+                                 nil];
+    
+//    for(int i=0; i < 40; i++) {
+//        int r = (rand() + rand()) % 1000;
+//        chartData[i] = [NSNumber numberWithInt:r + 200];
+//    }
+    
     
     // Setting up the line chart
     //y 网格
     self.chart.verticalGridStep = 8;
-    self.chart.horizontalGridStep = 9;
+    //x 几个空
+    self.chart.horizontalGridStep = 6;
+    
     self.chart.valueLabelPosition = ValueLabelLeft;
+    
+    //self.chart.fillColor = [UIColor cyanColor];
     self.chart.fillColor = nil;
     
+    //x 轴
     self.chart.labelForIndex = ^(NSUInteger item) {
         return [NSString stringWithFormat:@"%lu",(unsigned long)item];
     };
@@ -82,7 +97,7 @@
     };
     
     _chartWithDates.labelForValue = ^(CGFloat value) {
-        return [NSString stringWithFormat:@"%.02f €", value];
+        return [NSString stringWithFormat:@"%.02f", value];
     };
     
     [_chartWithDates setChartData:chartData];
